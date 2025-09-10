@@ -73,12 +73,15 @@ apple = Apple("apple.png")
 snake = [head]
 
 clock = time.Clock()
+score = 0
 game = True
 finish = False
 walking_timer = timer()
 font.init()
 font_1 = font.Font(None, 50)
-lose_text = font_1.render("You lost!", True, (255, 0, 0))
+font_2 = font.Font(None, 35)
+lose_text = font_1.render("You lost!", 1, (255, 0, 0))
+
 
 while game:
     for e in event.get():
@@ -89,11 +92,15 @@ while game:
         current_timer = timer()
         main_win.blit(background, (0, 0))
         head.get_direction()
+        score_text = font_2.render("Счёт: " + str(score), 1, (0, 200, 0))
+        main_win.blit(score_text, (50, 50))
 
         if current_timer - walking_timer >= 0.5:
             head.update()
     
             if head.rect.colliderect(apple.rect):
+                score += 1
+                main_win.blit(score_text, (50, 50))
                 apple.respawn()
                 last_part = snake[-1]
                 x_part2, y_part2 = last_part.rect.x, last_part.rect.y
