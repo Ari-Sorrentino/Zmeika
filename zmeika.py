@@ -25,8 +25,24 @@ class Snake(GameSprite):
         self.dy = 0
 
     def update(self):
+        for i in range(len(snake) - 1, 0, -1):
+            snake[i].rect.x = snake[i - 1].rect.x
+            snake[i].rect.y = snake[i - 1].rect.y
+
         self.rect.x += self.dx
         self.rect.y += self.dy
+
+        if self.rect.x > 700:
+            self.rect.x = 0
+
+        if self.rect.x < 0:
+            self.rect.x = 700
+
+        if self.rect.y < 0:
+            self.rect.y = 450
+
+        if self.rect.y > 450:
+            self.rect.y = 0
 
     def get_direction(self):
         keys = key.get_pressed()
@@ -43,12 +59,26 @@ class Snake(GameSprite):
             self.dx = 50
             self.dy = 0
 
+class Apple(GameSprite):
+    def __init__(self, player_image):
+        super().__init__(player_image, 0, 0)
+        self.respawn()
+
+    def respawn(self):
+        self.rect.x = randrange(0, 700, 50)
+        self.rect.y = randrange(0, 450, 50)
+
 head = Snake("head.png", 200, 250)
+apple = Apple("apple.png")
+snake = [head]
 
 clock = time.Clock()
 game = True
 finish = False
 walking_timer = timer()
+font.init()
+font_1 = font.Font(None, 50)
+lose_text = font_1.render("You lost!", True, (255, 0, 0))
 
 while game:
     for e in event.get():
@@ -62,9 +92,34 @@ while game:
 
         if current_timer - walking_timer >= 0.5:
             head.update()
+    
+            if head.rect.colliderect(apple.rect):
+                apple.respawn()
+                last_part = snake[-1]
+                x_part2, y_part2 = last_part.rect.x, last_part.rect.y
+
+                if head.dx > 0:
+                    x_part2 -= 50
+                elif head.dx < 0:
+                    x_part2 += 50
+                elif head.dy > 0:
+                    y_part2 -= 50
+                elif head.dy < 0:
+                    y_part2 += 50
+
+                new_part = Snake("square.png", x_part2, y_part2)
+                snake.append(new_part)
+
             walking_timer = timer()
-        
-        head.draw()
+
+        for part in snake[1:]:
+            if head.rect.colliderect(part.rect):
+                finish = True
+                main_win.blit(lose_text, (400, 250))
+
+        apple.draw()
+        for part in snake:
+                part.draw()
 
     display.update()
     clock.tick(60)
