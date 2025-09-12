@@ -68,11 +68,44 @@ class Apple(GameSprite):
         self.rect.x = randrange(0, 700, 50)
         self.rect.y = randrange(0, 450, 50)
 
+class BadApple(GameSprite):
+    def __init__(self, player_image):
+        super().__init__(player_image, 0, 0)
+        self.respawn()
+
+    def respawn(self):
+        self.rect.x = randrange(0, 700, 50)
+        self.rect.y = randrange(0, 450, 50)
+
+class GoldenApple(GameSprite):
+    def __init__(self, player_image):
+        super().__init__(player_image, 0, 0)
+        self.respawn()
+
+    def respawn(self):
+        self.rect.x = randrange(0, 700, 50)
+        self.rect.y = randrange(0, 450, 50)
+
+def load_record():
+    try:
+        with open("record.txt", "r") as file:
+            return(int(file.read()))
+
+    except:
+        return 0
+
+def save_record(value):
+    with open("record.txt", "w") as file:
+        file.write(str(value))
+
 head = Snake("head.png", 200, 250)
 apple = Apple("apple.png")
+bad_apple = BadApple("heaviest_thing_ever.png")
+golden_apple = GoldenApple("golden_apple.png")
 snake = [head]
 
 clock = time.Clock()
+record = load_record()
 score = 0
 game = True
 finish = False
@@ -81,7 +114,6 @@ font.init()
 font_1 = font.Font(None, 50)
 font_2 = font.Font(None, 35)
 lose_text = font_1.render("You lost!", 1, (255, 0, 0))
-
 
 while game:
     for e in event.get():
@@ -92,9 +124,7 @@ while game:
         current_timer = timer()
         main_win.blit(background, (0, 0))
         head.get_direction()
-        score_text = font_2.render("Счёт: " + str(score), 1, (0, 200, 0))
-        main_win.blit(score_text, (50, 50))
-
+        
         if current_timer - walking_timer >= 0.5:
             head.update()
     
@@ -117,16 +147,53 @@ while game:
                 new_part = Snake("square.png", x_part2, y_part2)
                 snake.append(new_part)
 
+            if head.rect.colliderect(bad_apple.rect):
+                score -= 5
+                bad_apple.respawn()
+
+            if head.rect.colliderect(golden_apple.rect):
+                score += 5
+                main_win.blit(score_text, (50, 50))
+                golden_apple.respawn()
+                last_part = snake[-1]
+                x_part2, y_part2 = last_part.rect.x, last_part.rect.y
+
+                if head.dx > 0:
+                    x_part2 -= 50
+                elif head.dx < 0:
+                    x_part2 += 50
+                elif head.dy > 0:
+                    y_part2 -= 50
+                elif head.dy < 0:
+                    y_part2 += 50
+
+                new_part = Snake("square.png", x_part2, y_part2)
+                snake.append(new_part)
+
             walking_timer = timer()
 
         for part in snake[1:]:
             if head.rect.colliderect(part.rect):
                 finish = True
                 main_win.blit(lose_text, (400, 250))
-
+                if score > record:
+                    record = score
+                    save_record(record)
+                    
         apple.draw()
+        bad_apple.draw()
+        golden_apple.draw()
         for part in snake:
                 part.draw()
+
+        if score < 0:
+            finish = True
+            main_win.blit(lose_text, (400, 250))
+
+        score_text = font_2.render("Счёт: " + str(score), 1, (0, 200, 0))
+        main_win.blit(score_text, (50, 50))
+        record_text = font_2.render("Рекорд: " + str(record), 1, (0, 200, 0))
+        main_win.blit(record_text, (50, 75))
 
     display.update()
     clock.tick(60)
