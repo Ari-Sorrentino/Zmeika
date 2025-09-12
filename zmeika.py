@@ -113,7 +113,6 @@ walking_timer = timer()
 font.init()
 font_1 = font.Font(None, 50)
 font_2 = font.Font(None, 35)
-lose_text = font_1.render("You lost!", 1, (255, 0, 0))
 
 while game:
     for e in event.get():
@@ -150,11 +149,29 @@ while game:
             if head.rect.colliderect(bad_apple.rect):
                 score -= 5
                 bad_apple.respawn()
+                if len(snake) > 1:
+                    last_part = snake[-1]
+                    snake.remove(last_part)
 
             if head.rect.colliderect(golden_apple.rect):
                 score += 5
                 main_win.blit(score_text, (50, 50))
                 golden_apple.respawn()
+                last_part = snake[-1]
+                x_part2, y_part2 = last_part.rect.x, last_part.rect.y
+
+                if head.dx > 0:
+                    x_part2 -= 50
+                elif head.dx < 0:
+                    x_part2 += 50
+                elif head.dy > 0:
+                    y_part2 -= 50
+                elif head.dy < 0:
+                    y_part2 += 50
+
+                new_part = Snake("square.png", x_part2, y_part2)
+                snake.append(new_part)
+
                 last_part = snake[-1]
                 x_part2, y_part2 = last_part.rect.x, last_part.rect.y
 
@@ -190,6 +207,7 @@ while game:
             finish = True
             main_win.blit(lose_text, (400, 250))
 
+        lose_text = font_1.render("You lost!", 1, (255, 0, 0))
         score_text = font_2.render("Счёт: " + str(score), 1, (0, 200, 0))
         main_win.blit(score_text, (50, 50))
         record_text = font_2.render("Рекорд: " + str(record), 1, (0, 200, 0))
